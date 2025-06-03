@@ -1,0 +1,5 @@
+{
+  "name": "AI Dream Interpreter",
+  "description": "An application that uses AI to interpret your dreams. Describe your dream and receive a thoughtful interpretation.",
+  "requestFramePermissions": []
+}
