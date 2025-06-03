@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { DreamInput } from './components/DreamInput';
 import { InterpretationDisplay } from './components/InterpretationDisplay';
 import { Loader } from './components/Loader';
@@ -39,7 +38,48 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Speak the interpretation using a woman's voice if available
+  useEffect(() => {
+    if (interpretation && !isLoading && !error) {
+      const synth = window.speechSynthesis;
+      let voices = synth.getVoices();
 
+      function speakWithFemaleVoice() {
+        // Try to find a female voice (by name or gender)
+        const femaleVoice =
+          voices.find(
+            v =>
+              (v.name.toLowerCase().includes('female') ||
+                v.name.toLowerCase().includes('woman') ||
+                (v as any).gender === 'female' ||
+                v.name.toLowerCase().includes('zira') || // Windows default female
+                v.name.toLowerCase().includes('susan')) // Another common female
+          ) ||
+          voices.find(v => v.name.toLowerCase().includes('zira')) || // fallback
+          voices.find(v => v.name.toLowerCase().includes('female')) || // fallback
+          voices[0]; // fallback to first
+
+        const utterance = new window.SpeechSynthesisUtterance(interpretation as string);
+        utterance.voice = femaleVoice;
+        utterance.rate = 1;
+        utterance.pitch = 1.1;
+        utterance.lang = 'en-US';
+        synth.cancel();
+        synth.speak(utterance);
+      }
+
+      if (voices.length === 0) {
+        synth.onvoiceschanged = () => {
+          voices = synth.getVoices();
+          speakWithFemaleVoice();
+        };
+      } else {
+        speakWithFemaleVoice();
+      }
+
+      return () => synth.cancel();
+    }
+  }, [interpretation, isLoading, error]);
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden font-[Cormorant_Garamond] bg-gradient-to-br from-indigo-950 via-purple-900 to-blue-900 selection:bg-purple-500 selection:text-white">
